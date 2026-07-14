@@ -572,14 +572,8 @@ async function pullState(){
           players[pid] = p;
         } else {
           delete players[pid];
-          // stale entry left behind by a client that vanished without cleaning up - remove it
-          fetch(`${FIREBASE_URL}/rooms/${room}/players/${pid}.json`, { method:'DELETE' }).then(()=>{
-            fetch(`${FIREBASE_URL}/rooms/${room}/players.json`).then(r=>r.json()).then(remaining=>{
-              if(!remaining || Object.keys(remaining).length === 0){
-                fetch(`${FIREBASE_URL}/rooms/${room}.json`, { method:'DELETE' });
-              }
-            });
-          }).catch(()=>{});
+          // stale entry left behind by a client that vanished without cleaning up - remove just that entry
+          fetch(`${FIREBASE_URL}/rooms/${room}/players/${pid}.json`, { method:'DELETE' }).catch(()=>{});
         }
       }
       for(const pid in players){
@@ -617,7 +611,10 @@ async function leaveGame(){
     await fetch(`${FIREBASE_URL}/rooms/${room}/effects/${myId}.json`, { method:'DELETE' });
 
     const remaining = await fetch(`${FIREBASE_URL}/rooms/${room}/players.json`).then(r=>r.json());
-    if(!remaining || Object.keys(remaining).length === 0){
+    const remainingVotes = await fetch(`${FIREBASE_URL}/rooms/${room}/votes.json`).then(r=>r.json());
+    const noPlayers = !remaining || Object.keys(remaining).length === 0;
+    const noVotes = !remainingVotes || Object.keys(remainingVotes).length === 0;
+    if(noPlayers && noVotes){
       await fetch(`${FIREBASE_URL}/rooms/${room}.json`, { method:'DELETE' });
     }
   }catch(e){}
