@@ -2,39 +2,75 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Arena Shooter</title>
+<title>MeatballShooter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  body { margin:0; background:#111; color:#eee; font-family:sans-serif; overflow:hidden; }
-  #authScreen { max-width:400px; margin:60px auto; text-align:center; }
-  #authScreen input { padding:8px; font-size:16px; width:200px; margin:8px; border-radius:6px; border:1px solid #444; background:#222; color:#eee; }
-  #authScreen button { padding:8px 16px; font-size:15px; border-radius:6px; border:none; background:#e0552b; color:#fff; cursor:pointer; margin:4px; }
-  #lobby input { padding:8px; font-size:16px; width:200px; margin:8px; border-radius:6px; border:1px solid #444; background:#222; color:#eee; }
-  #lobby button, #voteScreen button, #leaveBtn { padding:8px 16px; font-size:15px; border-radius:6px; border:none; background:#e0552b; color:#fff; cursor:pointer; }
-  .swatch { width:28px; height:28px; border-radius:50%; display:inline-block; margin:4px; cursor:pointer; border:2px solid transparent; }
-  .swatch.sel { border-color:#fff; }
-  .skinBtn { padding:8px 12px; margin:4px; border-radius:6px; border:1px solid #444; background:#222; color:#eee; cursor:pointer; }
-  .skinBtn.sel { background:#e0552b; border-color:#e0552b; }
-  #hud { position:fixed; top:10px; left:10px; font-size:13px; z-index:5; background:rgba(0,0,0,.4); padding:6px 10px; border-radius:6px;}
+  :root{
+    --mb-bg:#160821;
+    --mb-panel:#221033;
+    --mb-panel-edge:#4a1f6b;
+    --mb-magenta:#ff2e88;
+    --mb-cyan:#2ee6ff;
+    --mb-yellow:#ffd23f;
+    --mb-sauce:#ff5a3c;
+    --mb-text:#f3e9ff;
+  }
+  * { box-sizing:border-box; image-rendering:pixelated; }
+  body {
+    margin:0; overflow:hidden; color:var(--mb-text);
+    font-family:'Press Start 2P', monospace;
+    background:
+      radial-gradient(circle at 50% 0%, #341255 0%, var(--mb-bg) 60%);
+    background-color:var(--mb-bg);
+    position:relative;
+  }
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:50;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0px, rgba(0,0,0,.25) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:multiply; opacity:.35;
+  }
+  h2 { color:var(--mb-yellow); text-shadow:3px 3px 0 var(--mb-magenta); letter-spacing:1px; line-height:1.6; }
+  p, #loggedInAs, #voteStatus { font-size:10px; line-height:1.8; }
+  #authScreen { max-width:420px; margin:60px auto; text-align:center; background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-magenta); padding:24px 18px; }
+  #authScreen input { padding:10px; font-size:11px; width:180px; margin:8px; border:3px solid var(--mb-panel-edge); background:#0e0616; color:var(--mb-cyan); font-family:inherit; }
+  #authScreen button, #lobby button, #voteScreen button, #leaveBtn, #backFromLeaderboard {
+    padding:10px 14px; font-size:10px; border:3px solid #000; box-shadow:3px 3px 0 #000; background:var(--mb-sauce); color:#fff0e0; cursor:pointer; margin:6px; font-family:inherit;
+  }
+  #authScreen button:hover, #lobby button:hover, #voteScreen button:hover, #leaveBtn:hover, #backFromLeaderboard:hover { background:var(--mb-magenta); }
+  #authScreen button:active, #lobby button:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
+  #lobby { max-width:460px; margin:40px auto; text-align:center; background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-cyan); padding:20px; }
+  #lobby input { padding:10px; font-size:11px; width:180px; margin:8px; border:3px solid var(--mb-panel-edge); background:#0e0616; color:var(--mb-cyan); font-family:inherit; }
+  .swatch { width:26px; height:26px; border-radius:50%; display:inline-block; margin:4px; cursor:pointer; border:3px solid #000; box-shadow:0 0 0 2px #000; }
+  .swatch.sel { border-color:var(--mb-yellow); box-shadow:0 0 0 2px var(--mb-yellow); }
+  .skinBtn { padding:8px 10px; margin:4px; border:3px solid #000; background:#0e0616; color:var(--mb-text); cursor:pointer; font-family:inherit; font-size:9px; box-shadow:2px 2px 0 #000; }
+  .skinBtn.sel { background:var(--mb-magenta); border-color:var(--mb-yellow); }
+  #hud { position:fixed; top:10px; left:10px; font-size:9px; z-index:5; background:var(--mb-panel); border:3px solid var(--mb-panel-edge); padding:8px 10px; color:var(--mb-cyan); box-shadow:3px 3px 0 #000; }
   #canvasWrap { display:none; }
-  canvas { display:block; background:#1a1a1a; margin:0 auto; }
-  .hp { position:fixed; top:10px; right:10px; font-size:16px; z-index:5;}
+  canvas { display:block; background:#0e0616; margin:0 auto; border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 30px var(--mb-magenta); }
+  .hp { position:fixed; top:10px; right:10px; font-size:11px; z-index:5; background:var(--mb-panel); border:3px solid var(--mb-panel-edge); padding:8px 10px; color:var(--mb-yellow); box-shadow:3px 3px 0 #000; }
   #leaveBtn { position:fixed; bottom:10px; right:10px; z-index:5; }
-  .mapCard { display:inline-block; width:120px; margin:8px; padding:10px; border:2px solid #444; border-radius:8px; cursor:pointer; background:#1c1c1c; }
-  .mapCard.sel { border-color:#e0552b; }
-  .mapCard .votes { font-size:12px; color:#aaa; margin-top:6px; }
-  #devBtn { position:fixed; bottom:10px; left:10px; z-index:5; opacity:.15; font-size:11px; background:none; border:1px solid #444; color:#666; padding:3px 6px; border-radius:4px; cursor:pointer; }
+  #leaderboardScreen { background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-yellow); padding:20px; }
+  #leaderboardScreen table { font-family:inherit; }
+  #leaderboardScreen th { color:var(--mb-yellow); font-size:9px; padding-bottom:8px; }
+  #leaderboardScreen td { font-size:9px; padding:6px 4px; color:var(--mb-text); border-top:2px dashed var(--mb-panel-edge); }
+  .mapCard { display:inline-block; width:130px; margin:8px; padding:12px; border:3px solid var(--mb-panel-edge); cursor:pointer; background:var(--mb-panel); box-shadow:3px 3px 0 #000; font-size:9px; }
+  .mapCard.sel { border-color:var(--mb-yellow); box-shadow:3px 3px 0 var(--mb-magenta); }
+  .mapCard .votes { font-size:9px; color:var(--mb-cyan); margin-top:8px; }
+  #voteScreen { text-align:center; margin-top:40px; }
+  #devBtn { position:fixed; bottom:10px; left:10px; z-index:5; opacity:.15; font-size:9px; background:none; border:1px solid #444; color:#666; padding:3px 6px; cursor:pointer; font-family:inherit; }
   #devBtn:hover { opacity:.6; }
-  #devPanel { position:fixed; bottom:40px; left:10px; z-index:7; background:#181818; border:1px solid #e0552b; border-radius:8px; padding:10px; display:none; width:220px; }
-  #devPanel h4 { margin:2px 0 8px; color:#e0552b; font-size:13px; }
-  #devPanel button { display:block; width:100%; margin:3px 0; padding:6px; font-size:12px; background:#222; border:1px solid #444; color:#eee; border-radius:5px; cursor:pointer; }
-  #devPanel button.on { background:#e0552b; border-color:#e0552b; }
-  #trollFlash { position:fixed; top:0; left:0; width:100%; height:100%; z-index:8; display:none; align-items:center; justify-content:center; font-size:36px; color:#fff; background:rgba(200,0,0,.35); pointer-events:none; }
+  #devPanel { position:fixed; bottom:40px; left:10px; z-index:7; background:#0e0616; border:3px solid var(--mb-sauce); padding:10px; display:none; width:230px; box-shadow:4px 4px 0 #000; }
+  #devPanel h4 { margin:2px 0 10px; color:var(--mb-sauce); font-size:10px; }
+  #devPanel button { display:block; width:100%; margin:4px 0; padding:8px; font-size:9px; background:#221033; border:2px solid var(--mb-panel-edge); color:var(--mb-text); cursor:pointer; font-family:inherit; }
+  #devPanel button.on { background:var(--mb-sauce); border-color:var(--mb-sauce); color:#fff; }
+  #trollFlash { position:fixed; top:0; left:0; width:100%; height:100%; z-index:8; display:none; align-items:center; justify-content:center; font-size:22px; text-align:center; padding:40px; color:#fff; background:rgba(160,0,60,.55); pointer-events:none; font-family:'Press Start 2P', monospace; }
 </style>
 </head>
 <body>
 
 <div id="authScreen">
-  <h2>Arena Shooter</h2>
+  <h2>🍝 MeatballShooter</h2>
   <p>Log in or create an account to play.</p>
   <input id="authUser" placeholder="username" autocomplete="off">
   <br>
@@ -42,11 +78,11 @@
   <br>
   <button id="loginBtn">Log in</button>
   <button id="registerBtn">Register</button>
-  <p id="authStatus" style="color:#e0552b; font-size:13px; min-height:18px;"></p>
+  <p id="authStatus" style="color:var(--mb-yellow); font-size:9px; min-height:18px;"></p>
 </div>
 
 <div id="lobby" style="display:none">
-  <h2>Arena Shooter</h2>
+  <h2>🍝 MeatballShooter</h2>
   <p>Enter a room code. Share the same code with your friend to play together.</p>
   <input id="roomInput" placeholder="room code e.g. blue42" value="blue42">
   <br>
@@ -79,7 +115,7 @@
 </div>
 
 <div id="canvasWrap">
-  <div id="hud">Room: <span id="roomLabel"></span> | Map: <span id="mapLabel"></span> | WASD move, mouse aim, click to shoot</div>
+  <div id="hud">ROOM: <span id="roomLabel"></span> | MAP: <span id="mapLabel"></span> | WASD MOVE · AIM · CLICK TO FLING</div>
   <div class="hp" id="hpLabel"></div>
   <button id="leaveBtn">Leave game</button>
   <div id="respawnOverlay"></div>
@@ -113,12 +149,12 @@ let invulnUntil = 0;
 let pushTimer, pullTimer;
 let currentMap = null;
 
-const COLORS = ['#e0552b','#4aa8ff','#4caf50','#e0d02b','#c04ae0','#ff6fa5','#2be0c8','#ffffff'];
+const COLORS = ['#ff5a3c','#2ee6ff','#ffd23f','#ff2e88','#7dff5a','#b06bff','#ff8c1a','#f3e9ff'];
 const SKINS = [
-  {id:'circle', label:'Circle'},
-  {id:'square', label:'Square'},
-  {id:'triangle', label:'Triangle'},
-  {id:'star', label:'Star'}
+  {id:'circle', label:'Meatball'},
+  {id:'square', label:'Crouton'},
+  {id:'triangle', label:'Nacho'},
+  {id:'star', label:'Star Puff'}
 ];
 const HATS = [
   {id:'none', label:'None'},
@@ -193,6 +229,7 @@ document.getElementById('authPass').addEventListener('keydown', e=>{
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
 
 const DEV_PASSWORD_HASH = 'f8d7a9c019a1311196a112e2b393bb4c7d50f7d0859a23694d63105ddb3fbc5e';
 let devUnlocked = false;
@@ -666,24 +703,32 @@ function drawSkin(skin, size){
     ctx.arc(0,0,size,0,Math.PI*2);
   }
   ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(0,0,0,.5)';
+  ctx.stroke();
 }
 
 function render(){
   ctx.clearRect(0,0,900,600);
-  ctx.strokeStyle = '#333';
+  ctx.strokeStyle = 'rgba(46,230,255,.12)';
   for(let x=0;x<900;x+=50){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,600); ctx.stroke(); }
   for(let y=0;y<600;y+=50){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(900,y); ctx.stroke(); }
 
   if(currentMap){
-    ctx.fillStyle = '#3a3a3a';
     for(const o of MAPS[currentMap].obstacles){
+      ctx.fillStyle = '#3a1a52';
       ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.strokeStyle = '#ff2e88';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(o.x+1,o.y+1,o.w-2,o.h-2);
     }
   }
 
   for(const b of bullets){
+    ctx.fillStyle = '#ff5a3c';
+    ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#ffd23f';
-    ctx.beginPath(); ctx.arc(b.x,b.y,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x-1,b.y-1,2,0,Math.PI*2); ctx.fill();
   }
 
   for(const pid in players){
@@ -707,14 +752,14 @@ function render(){
     if(p.hat && p.hat !== 'none') drawHat(p.hat, size);
     ctx.restore();
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#f3e9ff';
+    ctx.font = '9px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(p.name||'?', p.x, p.y-24);
+    ctx.fillText(p.name||'?', p.x, p.y-26);
 
-    ctx.fillStyle = '#500';
+    ctx.fillStyle = '#3a1a52';
     ctx.fillRect(p.x-20, p.y-20, 40, 5);
-    ctx.fillStyle = '#4caf50';
+    ctx.fillStyle = '#7dff5a';
     ctx.fillRect(p.x-20, p.y-20, 40*Math.max(0,(p.hp??100))/100, 5);
   }
 
