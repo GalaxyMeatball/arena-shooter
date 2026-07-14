@@ -194,10 +194,17 @@ document.getElementById('authPass').addEventListener('keydown', e=>{
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-const DEV_PASSWORD = '245901';
+const DEV_PASSWORD_HASH = 'f8d7a9c019a1311196a112e2b393bb4c7d50f7d0859a23694d63105ddb3fbc5e';
 let devUnlocked = false;
 let cheats = { god:false, speed:false, giant:false };
 let myEffect = null; // {type, until}
+
+async function checkDevPassword(pw){
+  const enc = new TextEncoder().encode(pw + '_arena_salt');
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  return hex === DEV_PASSWORD_HASH;
+}
 
 document.addEventListener('keydown', (e)=>{
   if(e.key.toLowerCase() !== 'p') return;
@@ -208,12 +215,15 @@ document.addEventListener('keydown', (e)=>{
     return;
   }
   const pw = prompt('Developer password:');
-  if(pw === DEV_PASSWORD){
-    devUnlocked = true;
-    document.getElementById('devPanel').style.display = 'block';
-  } else if(pw !== null){
-    alert('Incorrect password.');
-  }
+  if(pw === null) return;
+  checkDevPassword(pw).then(ok=>{
+    if(ok){
+      devUnlocked = true;
+      document.getElementById('devPanel').style.display = 'block';
+    } else {
+      alert('Incorrect password.');
+    }
+  });
 });
 
 document.getElementById('cheatGod').addEventListener('click', function(){
@@ -562,6 +572,14 @@ async function pullState(){
           players[pid] = p;
         } else {
           delete players[pid];
+          // stale entry left behind by a client that vanished without cleaning up - remove it
+          fetch(`${FIREBASE_URL}/rooms/${room}/players/${pid}.json`, { method:'DELETE' }).then(()=>{
+            fetch(`${FIREBASE_URL}/rooms/${room}/players.json`).then(r=>r.json()).then(remaining=>{
+              if(!remaining || Object.keys(remaining).length === 0){
+                fetch(`${FIREBASE_URL}/rooms/${room}.json`, { method:'DELETE' });
+              }
+            });
+          }).catch(()=>{});
         }
       }
       for(const pid in players){
@@ -596,6 +614,12 @@ async function leaveGame(){
     await fetch(`${FIREBASE_URL}/rooms/${room}/players/${myId}.json`, { method:'DELETE' });
     await fetch(`${FIREBASE_URL}/rooms/${room}/bullets/${myId}.json`, { method:'DELETE' });
     await fetch(`${FIREBASE_URL}/rooms/${room}/votes/${myId}.json`, { method:'DELETE' });
+    await fetch(`${FIREBASE_URL}/rooms/${room}/effects/${myId}.json`, { method:'DELETE' });
+
+    const remaining = await fetch(`${FIREBASE_URL}/rooms/${room}/players.json`).then(r=>r.json());
+    if(!remaining || Object.keys(remaining).length === 0){
+      await fetch(`${FIREBASE_URL}/rooms/${room}.json`, { method:'DELETE' });
+    }
   }catch(e){}
   location.reload();
 }
