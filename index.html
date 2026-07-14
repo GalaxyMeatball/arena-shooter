@@ -5,7 +5,9 @@
 <title>Arena Shooter</title>
 <style>
   body { margin:0; background:#111; color:#eee; font-family:sans-serif; overflow:hidden; }
-  #lobby, #voteScreen { max-width:440px; margin:50px auto; text-align:center; }
+  #authScreen { max-width:400px; margin:60px auto; text-align:center; }
+  #authScreen input { padding:8px; font-size:16px; width:200px; margin:8px; border-radius:6px; border:1px solid #444; background:#222; color:#eee; }
+  #authScreen button { padding:8px 16px; font-size:15px; border-radius:6px; border:none; background:#e0552b; color:#fff; cursor:pointer; margin:4px; }
   #lobby input { padding:8px; font-size:16px; width:200px; margin:8px; border-radius:6px; border:1px solid #444; background:#222; color:#eee; }
   #lobby button, #voteScreen button, #leaveBtn { padding:8px 16px; font-size:15px; border-radius:6px; border:none; background:#e0552b; color:#fff; cursor:pointer; }
   .swatch { width:28px; height:28px; border-radius:50%; display:inline-block; margin:4px; cursor:pointer; border:2px solid transparent; }
@@ -31,13 +33,24 @@
 </head>
 <body>
 
-<div id="lobby">
+<div id="authScreen">
+  <h2>Arena Shooter</h2>
+  <p>Log in or create an account to play.</p>
+  <input id="authUser" placeholder="username" autocomplete="off">
+  <br>
+  <input id="authPass" type="password" placeholder="password" autocomplete="off">
+  <br>
+  <button id="loginBtn">Log in</button>
+  <button id="registerBtn">Register</button>
+  <p id="authStatus" style="color:#e0552b; font-size:13px; min-height:18px;"></p>
+</div>
+
+<div id="lobby" style="display:none">
   <h2>Arena Shooter</h2>
   <p>Enter a room code. Share the same code with your friend to play together.</p>
   <input id="roomInput" placeholder="room code e.g. blue42" value="blue42">
   <br>
-  <input id="nameInput" placeholder="your name" value="Player">
-  <br>
+  <p id="loggedInAs" style="color:#aaa; font-size:13px;"></p>
   <p>Pick a color</p>
   <div id="colorPicker"></div>
   <p>Pick a skin</p>
@@ -104,6 +117,58 @@ const MAPS = {
       {x:200,y:150,w:60,h:60},{x:640,y:150,w:60,h:60},{x:200,y:390,w:60,h:60},{x:640,y:390,w:60,h:60},{x:420,y:270,w:60,h:60}
     ], spawns:[[60,60],[840,60],[60,540],[840,540],[450,300]] }
 };
+
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function validUsername(u){
+  return /^[a-zA-Z0-9_]{3,16}$/.test(u);
+}
+
+document.getElementById('registerBtn').addEventListener('click', async ()=>{
+  const status = document.getElementById('authStatus');
+  const user = document.getElementById('authUser').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if(!validUsername(user)){ status.textContent = 'Username: 3-16 letters, numbers, underscores only.'; return; }
+  if(pass.length < 4){ status.textContent = 'Password must be at least 4 characters.'; return; }
+  status.textContent = 'Checking...';
+  try{
+    const existing = await fetch(`${FIREBASE_URL}/users/${user}.json`).then(r=>r.json());
+    if(existing){ status.textContent = 'That username is taken. Try logging in instead.'; return; }
+    const hash = await hashPassword(pass);
+    await fetch(`${FIREBASE_URL}/users/${user}.json`, { method:'PUT', body: JSON.stringify({ passHash: hash, createdAt: Date.now() }) });
+    completeLogin(user);
+  }catch(e){ status.textContent = 'Registration failed. Try again.'; }
+});
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const status = document.getElementById('authStatus');
+  const user = document.getElementById('authUser').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if(!user || !pass){ status.textContent = 'Enter a username and password.'; return; }
+  status.textContent = 'Checking...';
+  try{
+    const existing = await fetch(`${FIREBASE_URL}/users/${user}.json`).then(r=>r.json());
+    if(!existing){ status.textContent = 'No account with that username. Register instead.'; return; }
+    const hash = await hashPassword(pass);
+    if(hash !== existing.passHash){ status.textContent = 'Incorrect password.'; return; }
+    completeLogin(user);
+  }catch(e){ status.textContent = 'Login failed. Try again.'; }
+});
+
+function completeLogin(user){
+  myName = user;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('lobby').style.display = 'block';
+  document.getElementById('loggedInAs').textContent = 'Logged in as ' + user;
+}
+
+document.getElementById('authPass').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('loginBtn').click();
+});
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -209,12 +274,10 @@ function buildPickers(){
 buildPickers();
 
 document.getElementById('joinBtn').addEventListener('click', joinRoom);
-document.getElementById('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') joinRoom(); });
 document.getElementById('leaveBtn').addEventListener('click', leaveGame);
 
 async function joinRoom(){
   room = document.getElementById('roomInput').value.trim() || 'default';
-  myName = document.getElementById('nameInput').value.trim() || 'Player';
   myId = Math.random().toString(36).slice(2,9);
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('voteScreen').style.display = 'block';
