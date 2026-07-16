@@ -57,6 +57,9 @@
     background: var(--rust); border-color: var(--tan);
   }
   #readyBtn.sel { background: var(--ok); border-color: var(--tan); }
+  .secondaryBtn { opacity: 0.7; border-color: var(--olive) !important; background: var(--gunmetal) !important; }
+  .secondaryBtn:hover { opacity: 1; }
+  .primaryBtn { font-weight: bold; }
 
   .swatch { width:26px; height:26px; border-radius:2px; display:inline-block; margin:4px; cursor:pointer; border:2px solid var(--gunmetal); }
   .swatch.sel { border-color: var(--tan); }
@@ -74,6 +77,23 @@
   #canvasWrap { display:none; }
   canvas { display:block; margin:0 auto; background: var(--gunmetal-dark); }
   .hp { position:fixed; top:10px; right:10px; font-size:15px; z-index:5; color: var(--tan); text-transform:uppercase; letter-spacing:1px; }
+  #hpBarWrap {
+    position:fixed; top:10px; right:10px; z-index:5;
+    background: rgba(23,25,28,.8); border:1px solid var(--olive);
+    padding:8px 12px; display:flex; align-items:center; gap:8px;
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  #hpBarLabel { font-size:12px; color: var(--khaki); }
+  #hpBarOuter {
+    width:140px; height:16px; background: var(--gunmetal-dark);
+    border:1px solid var(--olive); position:relative; overflow:hidden;
+  }
+  #hpBarFill {
+    height:100%; width:100%;
+    background: linear-gradient(90deg, #6b8a3a, #a9a17e);
+    transition: width 0.15s linear, background 0.2s linear;
+  }
+  #hpBarWrap #hpLabel { font-size:13px; color: var(--tan); min-width:34px; text-align:right; }
   #leaveBtn { position:fixed; bottom:10px; right:10px; z-index:5; background: var(--danger); border-color: var(--danger); }
   #leaveBtn:hover { background: #b5432a; }
 
@@ -119,12 +139,12 @@
 <div id="authScreen">
   <h2>Tactical Arena Shooter</h2>
   <p>Authenticate to enter the AO.</p>
-  <input id="authUser" placeholder="callsign" autocomplete="off">
+  <input id="authUser" placeholder="username" autocomplete="off">
   <br>
-  <input id="authPass" type="password" placeholder="access code" autocomplete="off">
+  <input id="authPass" type="password" placeholder="password" autocomplete="off">
   <br>
-  <button id="loginBtn">SIGN IN</button>
-  <button id="registerBtn">ENLIST</button>
+  <button id="loginBtn" class="primaryBtn">Sign In</button>
+  <button id="registerBtn" class="secondaryBtn">Create Account</button>
   <p id="authStatus" style="color:#e0552b; font-size:13px; min-height:18px;"></p>
 </div>
 
@@ -141,8 +161,8 @@
   <p>Headgear</p>
   <div id="hatPicker"></div>
   <br>
-  <button id="joinBtn">Join</button>
-  <button id="leaderboardBtn">KILL BOARD</button>
+  <button id="joinBtn" class="primaryBtn">Join Game</button>
+  <button id="leaderboardBtn" class="secondaryBtn">Leaderboard</button>
 </div>
 
 <div id="leaderboardScreen" style="display:none; max-width:400px; margin:50px auto; text-align:center;">
@@ -160,14 +180,18 @@
   <div id="mapCards"></div>
   <p id="voteStatus" style="color:#aaa; font-size:13px;"></p>
   <div id="participantList" style="margin:14px 0; font-size:14px;"></div>
-  <button id="readyBtn">LOCK AND LOAD</button>
-  <button id="leaveLobbyBtn">FALL BACK</button>
+  <button id="readyBtn" class="primaryBtn">Ready</button>
+  <button id="leaveLobbyBtn" class="secondaryBtn">Leave Lobby</button>
 </div>
 
 <div id="canvasWrap">
   <div id="hud">SECTOR: <span id="roomLabel"></span> | AO: <span id="mapLabel"></span> | WASD MOVE — AIM MOUSE — CLICK FIRE</div>
-  <div class="hp" id="hpLabel"></div>
-  <button id="leaveBtn">FALL BACK</button>
+  <div id="hpBarWrap">
+    <div id="hpBarLabel">HP</div>
+    <div id="hpBarOuter"><div id="hpBarFill"></div></div>
+    <div id="hpLabel"></div>
+  </div>
+  <button id="leaveBtn">Leave Match</button>
   <div id="respawnOverlay"></div>
   <canvas id="game" width="900" height="600"></canvas>
   <div id="devPanel">
@@ -469,7 +493,7 @@ async function startVoting(){
 
 async function toggleReady(){
   myReady = !myReady;
-  document.getElementById('readyBtn').textContent = myReady ? 'STAND DOWN' : 'LOCK AND LOAD';
+  document.getElementById('readyBtn').textContent = myReady ? 'Not Ready' : 'Ready';
   document.getElementById('readyBtn').classList.toggle('sel', myReady);
   await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, {
     method:'PUT', body: JSON.stringify({ name: myName, vote: myVote, ready: myReady, ts: Date.now() })
@@ -596,7 +620,7 @@ function respawnPlayer(initial){
   const [sx,sy] = pickSpawn();
   players[myId] = {
     x: sx, y: sy, angle:0, hp:100, name:myName, color:myColor, skin:mySkin, hat:myHat,
-    ts:Date.now()
+    alive:true, ts:Date.now()
   };
   alive = true;
   invulnUntil = Date.now() + 1500;
@@ -682,7 +706,10 @@ function gameTick(){
           alive = false;
           respawnAt = Date.now() + 3000;
           me.hp = 0;
+          me.alive = false;
+          me.respawnAt = respawnAt;
           recordDeath(b.owner);
+          pushState();
         }
         return false;
       }
@@ -691,7 +718,15 @@ function gameTick(){
   });
 
   const invuln = Date.now() < invulnUntil;
-  document.getElementById('hpLabel').textContent = 'HP: ' + me.hp + (invuln ? ' [ARMORED]' : '');
+  const hpPct = Math.max(0, Math.min(100, me.hp));
+  const fill = document.getElementById('hpBarFill');
+  fill.style.width = hpPct + '%';
+  fill.style.background = hpPct > 60
+    ? 'linear-gradient(90deg, #4f6b3a, #a9a17e)'
+    : hpPct > 30
+      ? 'linear-gradient(90deg, #b58a2a, #d9b25a)'
+      : 'linear-gradient(90deg, #8a2e2e, #b5532a)';
+  document.getElementById('hpLabel').textContent = me.hp + (invuln ? ' [ARM]' : '');
 }
 
 async function pushState(){
@@ -854,6 +889,29 @@ function render(){
   for(const pid in players){
     const p = players[pid];
     if(pid!==myId && Date.now()-p.ts>8000) continue;
+
+    const isDeadRemote = pid!==myId && p.alive === false;
+
+    if(isDeadRemote){
+      const remain = Math.max(0, Math.ceil(((p.respawnAt||0) - Date.now())/1000));
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.globalAlpha = 0.3;
+      ctx.rotate(p.angle||0);
+      ctx.fillStyle = p.color || '#4aa8ff';
+      drawSkin(p.skin || 'circle', 15);
+      ctx.restore();
+
+      ctx.fillStyle = '#8a2e2e';
+      ctx.font = 'bold 12px "Share Tech Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('☠ RESPAWNING' + (remain > 0 ? ' ' + remain : ''), p.x, p.y - 26);
+      ctx.fillStyle = '#d9d4bd';
+      ctx.font = '11px "Share Tech Mono", monospace';
+      ctx.fillText((p.name||'?').toUpperCase(), p.x, p.y+15+20);
+      continue;
+    }
+
     const isShielded = pid===myId && (Date.now() < invulnUntil || cheats.god);
     let size = 15;
     if(pid===myId && cheats.giant) size = 30;
@@ -872,15 +930,18 @@ function render(){
     if(p.hat && p.hat !== 'none') drawHat(p.hat, size);
     ctx.restore();
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#d9d4bd';
+    ctx.font = '11px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(p.name||'?', p.x, p.y-24);
+    ctx.fillText((p.name||'?').toUpperCase(), p.x, p.y+size+20);
 
-    ctx.fillStyle = '#500';
-    ctx.fillRect(p.x-20, p.y-20, 40, 5);
-    ctx.fillStyle = '#4caf50';
-    ctx.fillRect(p.x-20, p.y-20, 40*Math.max(0,(p.hp??100))/100, 5);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(p.x-20, p.y+size+6, 40, 6);
+    const hpFrac = Math.max(0,(p.hp??100))/100;
+    ctx.fillStyle = hpFrac > 0.6 ? '#4f6b3a' : hpFrac > 0.3 ? '#b58a2a' : '#8a2e2e';
+    ctx.fillRect(p.x-20, p.y+size+6, 40*hpFrac, 6);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+    ctx.strokeRect(p.x-20, p.y+size+6, 40, 6);
   }
 
   requestAnimationFrame(render);
