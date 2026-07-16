@@ -2,100 +2,147 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>MeatballShooter</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Tactical Arena Shooter</title>
 <style>
-  :root{
-    --mb-bg:#160821;
-    --mb-panel:#221033;
-    --mb-panel-edge:#4a1f6b;
-    --mb-magenta:#ff2e88;
-    --mb-cyan:#2ee6ff;
-    --mb-yellow:#ffd23f;
-    --mb-sauce:#ff5a3c;
-    --mb-text:#f3e9ff;
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  :root {
+    --olive: #4b5320;
+    --olive-dark: #2e3315;
+    --khaki: #a9a17e;
+    --gunmetal: #23262b;
+    --gunmetal-dark: #17191c;
+    --rust: #b5532a;
+    --tan: #c2b280;
+    --danger: #8a2e2e;
+    --ok: #4f6b3a;
+    --text: #d9d4bd;
   }
-  * { box-sizing:border-box; image-rendering:pixelated; }
   body {
-    margin:0; overflow:hidden; color:var(--mb-text);
-    font-family:'Press Start 2P', monospace;
+    margin:0; overflow:hidden;
     background:
-      radial-gradient(circle at 50% 0%, #341255 0%, var(--mb-bg) 60%);
-    background-color:var(--mb-bg);
-    position:relative;
+      repeating-linear-gradient(135deg, rgba(0,0,0,0.15) 0 18px, rgba(0,0,0,0) 18px 36px),
+      linear-gradient(160deg, var(--gunmetal-dark), var(--olive-dark) 70%);
+    color: var(--text);
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    letter-spacing: 0.5px;
   }
-  body::after{
-    content:''; position:fixed; inset:0; pointer-events:none; z-index:50;
-    background:repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0px, rgba(0,0,0,.25) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:multiply; opacity:.35;
+  h2 { color: var(--tan); text-transform: uppercase; letter-spacing: 3px; font-size: 22px; border-bottom: 2px solid var(--rust); display:inline-block; padding-bottom:6px; }
+  p { color: var(--khaki); }
+  #authScreen, #lobby, #voteScreen, #leaderboardScreen {
+    max-width:420px; margin:50px auto; text-align:center;
+    background: rgba(23,25,28,0.85);
+    border: 1px solid var(--olive);
+    box-shadow: 0 0 0 1px var(--gunmetal-dark), 0 8px 30px rgba(0,0,0,.6);
+    padding: 24px 20px;
+    position: relative;
   }
-  h2 { color:var(--mb-yellow); text-shadow:3px 3px 0 var(--mb-magenta); letter-spacing:1px; line-height:1.6; }
-  p, #loggedInAs, #voteStatus { font-size:10px; line-height:1.8; }
-  #authScreen { max-width:420px; margin:60px auto; text-align:center; background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-magenta); padding:24px 18px; }
-  #authScreen input { padding:10px; font-size:11px; width:180px; margin:8px; border:3px solid var(--mb-panel-edge); background:#0e0616; color:var(--mb-cyan); font-family:inherit; }
-  #authScreen button, #lobby button, #voteScreen button, #leaveBtn, #backFromLeaderboard {
-    padding:10px 14px; font-size:10px; border:3px solid #000; box-shadow:3px 3px 0 #000; background:var(--mb-sauce); color:#fff0e0; cursor:pointer; margin:6px; font-family:inherit;
+  #authScreen::before, #lobby::before, #voteScreen::before, #leaderboardScreen::before,
+  #authScreen::after, #lobby::after, #voteScreen::after, #leaderboardScreen::after {
+    content:''; position:absolute; width:14px; height:14px; border: 2px solid var(--rust);
   }
-  #authScreen button:hover, #lobby button:hover, #voteScreen button:hover, #leaveBtn:hover, #backFromLeaderboard:hover { background:var(--mb-magenta); }
-  #authScreen button:active, #lobby button:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
-  #lobby { max-width:460px; margin:40px auto; text-align:center; background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-cyan); padding:20px; }
-  #lobby input { padding:10px; font-size:11px; width:180px; margin:8px; border:3px solid var(--mb-panel-edge); background:#0e0616; color:var(--mb-cyan); font-family:inherit; }
-  .swatch { width:26px; height:26px; border-radius:50%; display:inline-block; margin:4px; cursor:pointer; border:3px solid #000; box-shadow:0 0 0 2px #000; }
-  .swatch.sel { border-color:var(--mb-yellow); box-shadow:0 0 0 2px var(--mb-yellow); }
-  .skinBtn { padding:8px 10px; margin:4px; border:3px solid #000; background:#0e0616; color:var(--mb-text); cursor:pointer; font-family:inherit; font-size:9px; box-shadow:2px 2px 0 #000; }
-  .skinBtn.sel { background:var(--mb-magenta); border-color:var(--mb-yellow); }
-  #hud { position:fixed; top:10px; left:10px; font-size:9px; z-index:5; background:var(--mb-panel); border:3px solid var(--mb-panel-edge); padding:8px 10px; color:var(--mb-cyan); box-shadow:3px 3px 0 #000; }
+  #authScreen::before, #lobby::before, #voteScreen::before, #leaderboardScreen::before { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  #authScreen::after, #lobby::after, #voteScreen::after, #leaderboardScreen::after { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+
+  #authScreen input, #lobby input {
+    padding:9px; font-size:15px; width:200px; margin:8px;
+    background: var(--gunmetal-dark); border: 1px solid var(--olive); color: var(--text);
+    font-family: inherit;
+  }
+  #authScreen button, #lobby button, #voteScreen button, #leaveBtn, #readyBtn {
+    padding:9px 18px; font-size:14px; text-transform: uppercase; letter-spacing:1px;
+    border: 1px solid var(--rust); background: var(--olive); color: var(--text);
+    cursor:pointer; margin:4px; font-family: inherit;
+  }
+  #authScreen button:hover, #lobby button:hover, #voteScreen button:hover, #leaveBtn:hover, #readyBtn:hover {
+    background: var(--rust); border-color: var(--tan);
+  }
+  #readyBtn.sel { background: var(--ok); border-color: var(--tan); }
+
+  .swatch { width:26px; height:26px; border-radius:2px; display:inline-block; margin:4px; cursor:pointer; border:2px solid var(--gunmetal); }
+  .swatch.sel { border-color: var(--tan); }
+  .skinBtn {
+    padding:7px 11px; margin:4px; border-radius:2px; border:1px solid var(--olive);
+    background: var(--gunmetal-dark); color: var(--text); cursor:pointer; font-family: inherit; font-size:12px; text-transform:uppercase;
+  }
+  .skinBtn.sel { background: var(--rust); border-color: var(--tan); }
+
+  #hud {
+    position:fixed; top:10px; left:10px; font-size:12px; z-index:5;
+    background: rgba(23,25,28,.75); border:1px solid var(--olive); padding:6px 10px;
+    text-transform: uppercase; letter-spacing:1px;
+  }
   #canvasWrap { display:none; }
-  canvas { display:block; background:#0e0616; margin:0 auto; border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 30px var(--mb-magenta); }
-  .hp { position:fixed; top:10px; right:10px; font-size:11px; z-index:5; background:var(--mb-panel); border:3px solid var(--mb-panel-edge); padding:8px 10px; color:var(--mb-yellow); box-shadow:3px 3px 0 #000; }
-  #leaveBtn { position:fixed; bottom:10px; right:10px; z-index:5; }
-  #leaderboardScreen { background:var(--mb-panel); border:4px solid var(--mb-panel-edge); box-shadow:0 0 0 4px #000, 0 0 24px var(--mb-yellow); padding:20px; }
-  #leaderboardScreen table { font-family:inherit; }
-  #leaderboardScreen th { color:var(--mb-yellow); font-size:9px; padding-bottom:8px; }
-  #leaderboardScreen td { font-size:9px; padding:6px 4px; color:var(--mb-text); border-top:2px dashed var(--mb-panel-edge); }
-  .mapCard { display:inline-block; width:130px; margin:8px; padding:12px; border:3px solid var(--mb-panel-edge); cursor:pointer; background:var(--mb-panel); box-shadow:3px 3px 0 #000; font-size:9px; }
-  .mapCard.sel { border-color:var(--mb-yellow); box-shadow:3px 3px 0 var(--mb-magenta); }
-  .mapCard .votes { font-size:9px; color:var(--mb-cyan); margin-top:8px; }
-  #voteScreen { text-align:center; margin-top:40px; }
-  #devBtn { position:fixed; bottom:10px; left:10px; z-index:5; opacity:.15; font-size:9px; background:none; border:1px solid #444; color:#666; padding:3px 6px; cursor:pointer; font-family:inherit; }
-  #devBtn:hover { opacity:.6; }
-  #devPanel { position:fixed; bottom:40px; left:10px; z-index:7; background:#0e0616; border:3px solid var(--mb-sauce); padding:10px; display:none; width:230px; box-shadow:4px 4px 0 #000; }
-  #devPanel h4 { margin:2px 0 10px; color:var(--mb-sauce); font-size:10px; }
-  #devPanel button { display:block; width:100%; margin:4px 0; padding:8px; font-size:9px; background:#221033; border:2px solid var(--mb-panel-edge); color:var(--mb-text); cursor:pointer; font-family:inherit; }
-  #devPanel button.on { background:var(--mb-sauce); border-color:var(--mb-sauce); color:#fff; }
-  #trollFlash { position:fixed; top:0; left:0; width:100%; height:100%; z-index:8; display:none; align-items:center; justify-content:center; font-size:22px; text-align:center; padding:40px; color:#fff; background:rgba(160,0,60,.55); pointer-events:none; font-family:'Press Start 2P', monospace; }
+  canvas { display:block; margin:0 auto; background: var(--gunmetal-dark); }
+  .hp { position:fixed; top:10px; right:10px; font-size:15px; z-index:5; color: var(--tan); text-transform:uppercase; letter-spacing:1px; }
+  #leaveBtn { position:fixed; bottom:10px; right:10px; z-index:5; background: var(--danger); border-color: var(--danger); }
+  #leaveBtn:hover { background: #b5432a; }
+
+  .mapCard {
+    display:inline-block; width:120px; margin:8px; padding:10px;
+    border:1px solid var(--olive); cursor:pointer; background: var(--gunmetal-dark);
+    text-transform: uppercase; font-size:13px;
+  }
+  .mapCard.sel { border-color: var(--rust); background: rgba(181,83,42,0.15); }
+  .mapCard .votes { font-size:11px; color: var(--khaki); margin-top:6px; }
+
+  #respawnOverlay {
+    position:fixed; top:0; left:0; width:100%; height:100%; display:none;
+    align-items:center; justify-content:center; background:rgba(20,10,10,.6);
+    font-size:26px; z-index:6; color: var(--rust); text-transform:uppercase; letter-spacing:2px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  #devBtn { display:none; }
+  #devPanel {
+    position:fixed; bottom:40px; left:10px; z-index:7; background: var(--gunmetal-dark);
+    border:1px solid var(--rust); padding:10px; display:none; width:220px;
+  }
+  #devPanel h4 { margin:2px 0 8px; color: var(--rust); font-size:12px; text-transform:uppercase; letter-spacing:1px; }
+  #devPanel button {
+    display:block; width:100%; margin:3px 0; padding:6px; font-size:11px;
+    background: var(--gunmetal); border:1px solid var(--olive); color: var(--text);
+    border-radius:0; cursor:pointer; font-family: inherit; text-transform:uppercase;
+  }
+  #devPanel button.on { background: var(--rust); border-color: var(--tan); }
+  #trollFlash {
+    position:fixed; top:0; left:0; width:100%; height:100%; z-index:8; display:none;
+    align-items:center; justify-content:center; font-size:34px; color: var(--text);
+    background:rgba(80,10,10,.45); pointer-events:none; text-transform:uppercase; letter-spacing:2px;
+  }
+  table { border-collapse: collapse; }
+  th, td { padding:4px 8px; border-bottom:1px solid var(--olive); text-transform:uppercase; font-size:12px; }
+  th { color: var(--rust); }
 </style>
 </head>
 <body>
 
 <div id="authScreen">
-  <h2>🍝 MeatballShooter</h2>
-  <p>Log in or create an account to play.</p>
-  <input id="authUser" placeholder="username" autocomplete="off">
+  <h2>Tactical Arena Shooter</h2>
+  <p>Authenticate to enter the AO.</p>
+  <input id="authUser" placeholder="callsign" autocomplete="off">
   <br>
-  <input id="authPass" type="password" placeholder="password" autocomplete="off">
+  <input id="authPass" type="password" placeholder="access code" autocomplete="off">
   <br>
-  <button id="loginBtn">Log in</button>
-  <button id="registerBtn">Register</button>
-  <p id="authStatus" style="color:var(--mb-yellow); font-size:9px; min-height:18px;"></p>
+  <button id="loginBtn">SIGN IN</button>
+  <button id="registerBtn">ENLIST</button>
+  <p id="authStatus" style="color:#e0552b; font-size:13px; min-height:18px;"></p>
 </div>
 
 <div id="lobby" style="display:none">
-  <h2>🍝 MeatballShooter</h2>
-  <p>Enter a room code. Share the same code with your friend to play together.</p>
-  <input id="roomInput" placeholder="room code e.g. blue42" value="blue42">
+  <h2>Tactical Arena Shooter</h2>
+  <p>Enter a sector code. Share it with your squadmate to link up.</p>
+  <input id="roomInput" placeholder="sector code e.g. blue42" value="blue42">
   <br>
   <p id="loggedInAs" style="color:#aaa; font-size:13px;"></p>
   <p>Pick a color</p>
   <div id="colorPicker"></div>
-  <p>Pick a skin</p>
+  <p>Unit silhouette</p>
   <div id="skinPicker"></div>
-  <p>Pick a hat</p>
+  <p>Headgear</p>
   <div id="hatPicker"></div>
   <br>
   <button id="joinBtn">Join</button>
-  <button id="leaderboardBtn">View leaderboard</button>
+  <button id="leaderboardBtn">KILL BOARD</button>
 </div>
 
 <div id="leaderboardScreen" style="display:none; max-width:400px; margin:50px auto; text-align:center;">
@@ -109,15 +156,17 @@
 </div>
 
 <div id="voteScreen" style="display:none">
-  <h2>Vote for a map</h2>
+  <h2>Select Deployment Zone</h2>
   <div id="mapCards"></div>
   <p id="voteStatus" style="color:#aaa; font-size:13px;"></p>
+  <div id="participantList" style="margin:14px 0; font-size:14px;"></div>
+  <button id="readyBtn">LOCK AND LOAD</button>
 </div>
 
 <div id="canvasWrap">
-  <div id="hud">ROOM: <span id="roomLabel"></span> | MAP: <span id="mapLabel"></span> | WASD MOVE · AIM · CLICK TO FLING</div>
+  <div id="hud">SECTOR: <span id="roomLabel"></span> | AO: <span id="mapLabel"></span> | WASD MOVE — AIM MOUSE — CLICK FIRE</div>
   <div class="hp" id="hpLabel"></div>
-  <button id="leaveBtn">Leave game</button>
+  <button id="leaveBtn">FALL BACK</button>
   <div id="respawnOverlay"></div>
   <canvas id="game" width="900" height="600"></canvas>
   <div id="devPanel">
@@ -149,12 +198,12 @@ let invulnUntil = 0;
 let pushTimer, pullTimer;
 let currentMap = null;
 
-const COLORS = ['#ff5a3c','#2ee6ff','#ffd23f','#ff2e88','#7dff5a','#b06bff','#ff8c1a','#f3e9ff'];
+const COLORS = ['#4b5320','#6b6250','#3d4a3d','#8a2e2e','#5a4632','#2f3b2f','#7a6a3f','#c2b280'];
 const SKINS = [
-  {id:'circle', label:'Meatball'},
-  {id:'square', label:'Crouton'},
-  {id:'triangle', label:'Nacho'},
-  {id:'star', label:'Star Puff'}
+  {id:'circle', label:'Circle'},
+  {id:'square', label:'Square'},
+  {id:'triangle', label:'Triangle'},
+  {id:'star', label:'Star'}
 ];
 const HATS = [
   {id:'none', label:'None'},
@@ -166,11 +215,11 @@ const HATS = [
 ];
 
 const MAPS = {
-  open: { name:'Open Arena', obstacles: [], spawns:[[80,80],[820,80],[80,520],[820,520],[450,300]] },
-  maze: { name:'Maze', obstacles: [
+  open: { name:'Open Field', obstacles: [], spawns:[[80,80],[820,80],[80,520],[820,520],[450,300]] },
+  maze: { name:'Bunker Complex', obstacles: [
       {x:200,y:0,w:20,h:400},{x:400,y:200,w:20,h:400},{x:600,y:0,w:20,h:400},{x:0,y:450,w:300,h:20},{x:600,y:450,w:300,h:20}
     ], spawns:[[50,50],[850,550],[50,550],[850,50],[450,30]] },
-  pillars: { name:'Pillars', obstacles: [
+  pillars: { name:'Sandbag Row', obstacles: [
       {x:200,y:150,w:60,h:60},{x:640,y:150,w:60,h:60},{x:200,y:390,w:60,h:60},{x:640,y:390,w:60,h:60},{x:420,y:270,w:60,h:60}
     ], spawns:[[60,60],[840,60],[60,540],[840,540],[450,300]] }
 };
@@ -209,7 +258,7 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   status.textContent = 'Checking...';
   try{
     const existing = await fetch(`${FIREBASE_URL}/users/${user}.json`).then(r=>r.json());
-    if(!existing){ status.textContent = 'No account with that username. Register instead.'; return; }
+    if(!existing){ status.textContent = 'No service record found. Enlist first.'; return; }
     const hash = await hashPassword(pass);
     if(hash !== existing.passHash){ status.textContent = 'Incorrect password.'; return; }
     completeLogin(user);
@@ -220,7 +269,7 @@ function completeLogin(user){
   myName = user;
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('lobby').style.display = 'block';
-  document.getElementById('loggedInAs').textContent = 'Logged in as ' + user;
+  document.getElementById('loggedInAs').textContent = 'OPERATOR: ' + user;
 }
 
 document.getElementById('authPass').addEventListener('keydown', e=>{
@@ -229,7 +278,6 @@ document.getElementById('authPass').addEventListener('keydown', e=>{
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
 
 const DEV_PASSWORD_HASH = 'f8d7a9c019a1311196a112e2b393bb4c7d50f7d0859a23694d63105ddb3fbc5e';
 let devUnlocked = false;
@@ -384,6 +432,9 @@ async function joinRoom(){
   await startVoting();
 }
 
+let myReady = false;
+let myVote = null;
+
 async function startVoting(){
   const cards = document.getElementById('mapCards');
   cards.innerHTML = '';
@@ -395,51 +446,105 @@ async function startVoting(){
     div.onclick = ()=>castVote(key);
     cards.appendChild(div);
   });
+
+  // announce presence in the lobby
+  await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, {
+    method:'PUT', body: JSON.stringify({ name: myName, vote: null, ready: false, ts: Date.now() })
+  });
+
+  window._lobbyHeartbeat = setInterval(async ()=>{
+    await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, {
+      method:'PUT', body: JSON.stringify({ name: myName, vote: myVote, ready: myReady, ts: Date.now() })
+    });
+  }, 2000);
+
+  document.getElementById('readyBtn').onclick = toggleReady;
+
   pollVotes();
   window._voteInterval = setInterval(pollVotes, 800);
 }
 
+async function toggleReady(){
+  myReady = !myReady;
+  document.getElementById('readyBtn').textContent = myReady ? 'STAND DOWN' : 'LOCK AND LOAD';
+  document.getElementById('readyBtn').classList.toggle('sel', myReady);
+  await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, {
+    method:'PUT', body: JSON.stringify({ name: myName, vote: myVote, ready: myReady, ts: Date.now() })
+  });
+}
+
 async function castVote(mapKey){
+  myVote = mapKey;
   document.querySelectorAll('.mapCard').forEach(c=>c.classList.remove('sel'));
   document.getElementById('mapcard_'+mapKey).classList.add('sel');
-  await fetch(`${FIREBASE_URL}/rooms/${room}/votes/${myId}.json`, { method:'PUT', body: JSON.stringify(mapKey) });
+  await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, {
+    method:'PUT', body: JSON.stringify({ name: myName, vote: myVote, ready: myReady, ts: Date.now() })
+  });
 }
 
 async function pollVotes(){
   try{
-    // if a map has already been resolved by any player, adopt it and stop
     const resolvedRes = await fetch(`${FIREBASE_URL}/rooms/${room}/resolved_map.json`);
     const resolved = await resolvedRes.json();
     if(resolved && MAPS[resolved]){
       clearInterval(window._voteInterval);
+      clearInterval(window._lobbyHeartbeat);
       currentMap = resolved;
       enterGame();
       return;
     }
 
-    const res = await fetch(`${FIREBASE_URL}/rooms/${room}/votes.json`);
-    const data = await res.json() || {};
+    const lres = await fetch(`${FIREBASE_URL}/rooms/${room}/lobby.json`);
+    let lobby = await lres.json() || {};
+
+    // drop anyone who's gone quiet
+    let changed = false;
+    for(const pid in lobby){
+      if(pid !== myId && Date.now() - (lobby[pid].ts||0) > 8000){
+        delete lobby[pid];
+        fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${pid}.json`, { method:'DELETE' }).catch(()=>{});
+        changed = true;
+      }
+    }
+
+    const activeIds = Object.keys(lobby);
+    if(activeIds.length === 0){
+      // nobody left in the lobby - wipe voting state so the next arrival starts fresh
+      await Promise.all([
+        fetch(`${FIREBASE_URL}/rooms/${room}/votes.json`, { method:'DELETE' }),
+        fetch(`${FIREBASE_URL}/rooms/${room}/resolved_map.json`, { method:'DELETE' }),
+        fetch(`${FIREBASE_URL}/rooms/${room}/lobby.json`, { method:'DELETE' })
+      ]);
+      return;
+    }
+
     const counts = {open:0, maze:0, pillars:0};
-    let total = 0;
-    for(const pid in data){ if(counts[data[pid]] !== undefined){ counts[data[pid]]++; total++; } }
+    activeIds.forEach(pid=>{ const v = lobby[pid].vote; if(counts[v] !== undefined) counts[v]++; });
     Object.keys(counts).forEach(k=>{
       document.getElementById('votes_'+k).textContent = counts[k] + ' votes';
     });
 
-    document.getElementById('voteStatus').textContent = total + ' vote(s) cast. Highest vote wins once at least 2 votes are in, or after 12s.';
+    const list = document.getElementById('participantList');
+    list.innerHTML = activeIds.map(pid=>{
+      const p = lobby[pid];
+      return `<div>${p.name}${pid===myId?' (you)':''} — ${p.ready ? '✅ ready' : '⌛ not ready'}</div>`;
+    }).join('');
 
-    if(!window._voteStart) window._voteStart = Date.now();
-    const timeUp = Date.now() - window._voteStart > 12000;
-    if(total >= 2 || (timeUp && total >= 1)){
+    const allReady = activeIds.length >= 2 && activeIds.every(pid=>lobby[pid].ready);
+    document.getElementById('voteStatus').textContent = allReady
+      ? 'ALL UNITS READY — DEPLOYING...'
+      : (activeIds.length < 2 ? 'AWAITING SECOND OPERATOR...' : 'AWAITING ALL CLEAR...');
+
+    if(allReady){
       let winner = 'open', best = -1;
       Object.keys(counts).sort().forEach(k=>{ if(counts[k] > best){ best = counts[k]; winner = k; } });
-      // attempt to claim resolution atomically-ish: write only if still unset
       const check = await fetch(`${FIREBASE_URL}/rooms/${room}/resolved_map.json`);
       const already = await check.json();
       if(!already){
         await fetch(`${FIREBASE_URL}/rooms/${room}/resolved_map.json`, { method:'PUT', body: JSON.stringify(winner) });
       }
       clearInterval(window._voteInterval);
+      clearInterval(window._lobbyHeartbeat);
       currentMap = already && MAPS[already] ? already : winner;
       enterGame();
     }
@@ -536,7 +641,7 @@ function gameTick(){
     const remain = Math.ceil((respawnAt - Date.now())/1000);
     const overlay = document.getElementById('respawnOverlay');
     overlay.style.display = 'flex';
-    overlay.textContent = remain > 0 ? ('Respawning in ' + remain + '...') : 'Respawning...';
+    overlay.textContent = remain > 0 ? ('REINFORCEMENTS IN ' + remain + '...') : 'DEPLOYING...';
     if(Date.now() > respawnAt){
       respawnPlayer(false);
     }
@@ -584,7 +689,7 @@ function gameTick(){
   });
 
   const invuln = Date.now() < invulnUntil;
-  document.getElementById('hpLabel').textContent = 'HP: ' + me.hp + (invuln ? ' (shielded)' : '');
+  document.getElementById('hpLabel').textContent = 'HP: ' + me.hp + (invuln ? ' [ARMORED]' : '');
 }
 
 async function pushState(){
@@ -642,16 +747,18 @@ async function pullState(){
 async function leaveGame(){
   try{
     clearInterval(pushTimer); clearInterval(pullTimer);
+    clearInterval(window._voteInterval); clearInterval(window._lobbyHeartbeat);
     await fetch(`${FIREBASE_URL}/rooms/${room}/players/${myId}.json`, { method:'DELETE' });
     await fetch(`${FIREBASE_URL}/rooms/${room}/bullets/${myId}.json`, { method:'DELETE' });
     await fetch(`${FIREBASE_URL}/rooms/${room}/votes/${myId}.json`, { method:'DELETE' });
     await fetch(`${FIREBASE_URL}/rooms/${room}/effects/${myId}.json`, { method:'DELETE' });
+    await fetch(`${FIREBASE_URL}/rooms/${room}/lobby/${myId}.json`, { method:'DELETE' });
 
     const remaining = await fetch(`${FIREBASE_URL}/rooms/${room}/players.json`).then(r=>r.json());
-    const remainingVotes = await fetch(`${FIREBASE_URL}/rooms/${room}/votes.json`).then(r=>r.json());
+    const remainingLobby = await fetch(`${FIREBASE_URL}/rooms/${room}/lobby.json`).then(r=>r.json());
     const noPlayers = !remaining || Object.keys(remaining).length === 0;
-    const noVotes = !remainingVotes || Object.keys(remainingVotes).length === 0;
-    if(noPlayers && noVotes){
+    const noLobby = !remainingLobby || Object.keys(remainingLobby).length === 0;
+    if(noPlayers && noLobby){
       await fetch(`${FIREBASE_URL}/rooms/${room}.json`, { method:'DELETE' });
     }
   }catch(e){}
@@ -703,32 +810,43 @@ function drawSkin(skin, size){
     ctx.arc(0,0,size,0,Math.PI*2);
   }
   ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(0,0,0,.5)';
-  ctx.stroke();
 }
 
 function render(){
   ctx.clearRect(0,0,900,600);
-  ctx.strokeStyle = 'rgba(46,230,255,.12)';
+
+  // ground base + dirt patches
+  ctx.fillStyle = '#232922';
+  ctx.fillRect(0,0,900,600);
+  ctx.fillStyle = 'rgba(60,50,35,0.25)';
+  for(let i=0;i<10;i++){
+    const px = (i*137)%900, py = (i*271)%600;
+    ctx.beginPath(); ctx.ellipse(px,py,40,25,i,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.strokeStyle = 'rgba(75,83,32,0.35)';
   for(let x=0;x<900;x+=50){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,600); ctx.stroke(); }
   for(let y=0;y<600;y+=50){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(900,y); ctx.stroke(); }
 
   if(currentMap){
     for(const o of MAPS[currentMap].obstacles){
-      ctx.fillStyle = '#3a1a52';
+      ctx.fillStyle = '#5a4d33';
       ctx.fillRect(o.x,o.y,o.w,o.h);
-      ctx.strokeStyle = '#ff2e88';
+      ctx.strokeStyle = '#2e2718';
       ctx.lineWidth = 2;
-      ctx.strokeRect(o.x+1,o.y+1,o.w-2,o.h-2);
+      ctx.strokeRect(o.x,o.y,o.w,o.h);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      for(let sx=o.x; sx<o.x+o.w; sx+=10){ ctx.fillRect(sx,o.y,4,o.h); }
     }
   }
 
   for(const b of bullets){
-    ctx.fillStyle = '#ff5a3c';
-    ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#ffd23f';
-    ctx.beginPath(); ctx.arc(b.x-1,b.y-1,2,0,Math.PI*2); ctx.fill();
+    ctx.save();
+    ctx.translate(b.x,b.y);
+    ctx.rotate(Math.atan2(b.vy,b.vx));
+    ctx.fillStyle = '#ffcf6b';
+    ctx.fillRect(-6,-1.5,12,3);
+    ctx.restore();
   }
 
   for(const pid in players){
@@ -752,14 +870,14 @@ function render(){
     if(p.hat && p.hat !== 'none') drawHat(p.hat, size);
     ctx.restore();
 
-    ctx.fillStyle = '#f3e9ff';
-    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(p.name||'?', p.x, p.y-26);
+    ctx.fillText(p.name||'?', p.x, p.y-24);
 
-    ctx.fillStyle = '#3a1a52';
+    ctx.fillStyle = '#500';
     ctx.fillRect(p.x-20, p.y-20, 40, 5);
-    ctx.fillStyle = '#7dff5a';
+    ctx.fillStyle = '#4caf50';
     ctx.fillRect(p.x-20, p.y-20, 40*Math.max(0,(p.hp??100))/100, 5);
   }
 
