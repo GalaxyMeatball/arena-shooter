@@ -161,6 +161,7 @@
   <p id="voteStatus" style="color:#aaa; font-size:13px;"></p>
   <div id="participantList" style="margin:14px 0; font-size:14px;"></div>
   <button id="readyBtn">LOCK AND LOAD</button>
+  <button id="leaveLobbyBtn">FALL BACK</button>
 </div>
 
 <div id="canvasWrap">
@@ -429,6 +430,7 @@ async function joinRoom(){
   myId = Math.random().toString(36).slice(2,9);
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('voteScreen').style.display = 'block';
+  window.addEventListener('beforeunload', leaveGame);
   await startVoting();
 }
 
@@ -459,6 +461,7 @@ async function startVoting(){
   }, 2000);
 
   document.getElementById('readyBtn').onclick = toggleReady;
+  document.getElementById('leaveLobbyBtn').onclick = leaveGame;
 
   pollVotes();
   window._voteInterval = setInterval(pollVotes, 800);
@@ -566,7 +569,6 @@ function enterGame(){
     mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
   });
   canvas.addEventListener('click', shoot);
-  window.addEventListener('beforeunload', leaveGame);
 
   setInterval(gameTick, 33);
   pushTimer = setInterval(pushState, 120);
